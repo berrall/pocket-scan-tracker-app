@@ -12,16 +12,16 @@ import { useToast } from "@/hooks/use-toast";
 export const TransactionHistory = () => {
   const { transactions, deleteTransaction } = useTransactions();
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterCategory, setFilterCategory] = useState('');
-  const [filterType, setFilterType] = useState('');
+  const [filterCategory, setFilterCategory] = useState('all');
+  const [filterType, setFilterType] = useState('all');
   const { toast } = useToast();
 
   const allCategories = [...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES];
 
   const filteredTransactions = transactions.filter(transaction => {
     const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !filterCategory || transaction.category === filterCategory;
-    const matchesType = !filterType || transaction.type === filterType;
+    const matchesCategory = filterCategory === 'all' || transaction.category === filterCategory;
+    const matchesType = filterType === 'all' || transaction.type === filterType;
     
     return matchesSearch && matchesCategory && matchesType;
   });
@@ -69,7 +69,7 @@ export const TransactionHistory = () => {
                 <SelectValue placeholder="Type de transaction" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tous les types</SelectItem>
+                <SelectItem value="all">Tous les types</SelectItem>
                 <SelectItem value="expense">Dépenses</SelectItem>
                 <SelectItem value="income">Revenus</SelectItem>
               </SelectContent>
@@ -80,7 +80,7 @@ export const TransactionHistory = () => {
                 <SelectValue placeholder="Catégorie" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Toutes les catégories</SelectItem>
+                <SelectItem value="all">Toutes les catégories</SelectItem>
                 {allCategories.map((cat) => (
                   <SelectItem key={cat.id} value={cat.id}>
                     <div className="flex items-center gap-2">
