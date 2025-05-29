@@ -1,11 +1,61 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dashboard } from "@/components/Dashboard";
+import { AddExpense } from "@/components/AddExpense";
+import { ScanReceipt } from "@/components/ScanReceipt";
+import { TransactionHistory } from "@/components/TransactionHistory";
+import { Wallet, Receipt, Camera, History } from "lucide-react";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+      <div className="container mx-auto p-4 max-w-6xl">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-3">
+            <Wallet className="text-blue-600" />
+            Gestion Familiale
+          </h1>
+          <p className="text-gray-600 text-lg">Suivez vos dépenses et revenus en toute simplicité</p>
+        </div>
+
+        <Tabs defaultValue="dashboard" className="w-full">
+          <TabsList className="grid w-full grid-cols-4 mb-8 bg-white/80 backdrop-blur-sm">
+            <TabsTrigger value="dashboard" className="flex items-center gap-2">
+              <Wallet size={16} />
+              Tableau de bord
+            </TabsTrigger>
+            <TabsTrigger value="add" className="flex items-center gap-2">
+              <Receipt size={16} />
+              Ajouter
+            </TabsTrigger>
+            <TabsTrigger value="scan" className="flex items-center gap-2">
+              <Camera size={16} />
+              Scanner
+            </TabsTrigger>
+            <TabsTrigger value="history" className="flex items-center gap-2">
+              <History size={16} />
+              Historique
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="dashboard">
+            <Dashboard />
+          </TabsContent>
+
+          <TabsContent value="add">
+            <AddExpense />
+          </TabsContent>
+
+          <TabsContent value="scan">
+            <ScanReceipt />
+          </TabsContent>
+
+          <TabsContent value="history">
+            <TransactionHistory />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
