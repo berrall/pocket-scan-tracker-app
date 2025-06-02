@@ -5,18 +5,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTransactions } from "@/hooks/useTransactions";
-import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "@/types";
+import { useCategories } from "@/hooks/useCategories";
+import { useSettings } from "@/hooks/useSettings";
 import { Receipt, Wallet, Search, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export const TransactionHistory = () => {
   const { transactions, deleteTransaction } = useTransactions();
+  const { expenseCategories, incomeCategories } = useCategories();
+  const { settings } = useSettings();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterType, setFilterType] = useState('all');
   const { toast } = useToast();
 
-  const allCategories = [...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES];
+  const allCategories = [...expenseCategories, ...incomeCategories];
 
   const filteredTransactions = transactions.filter(transaction => {
     const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -41,6 +44,8 @@ export const TransactionHistory = () => {
       color: 'bg-gray-100 text-gray-700'
     };
   };
+
+  const formatAmount = (amount: number) => `${amount.toFixed(2)} ${settings.currencySymbol}`;
 
   return (
     <div className="space-y-6">
@@ -125,7 +130,7 @@ export const TransactionHistory = () => {
 
                     <div className="flex items-center gap-3">
                       <div className={`text-lg font-bold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                        {transaction.type === 'income' ? '+' : '-'}{transaction.amount.toFixed(2)} €
+                        {transaction.type === 'income' ? '+' : '-'}{formatAmount(transaction.amount)}
                       </div>
                       
                       <Button

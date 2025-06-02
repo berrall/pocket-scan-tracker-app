@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTransactions } from "@/hooks/useTransactions";
-import { EXPENSE_CATEGORIES } from "@/types";
+import { useCategories } from "@/hooks/useCategories";
+import { useSettings } from "@/hooks/useSettings";
 import { useToast } from "@/hooks/use-toast";
 import { Camera, Upload, X } from "lucide-react";
 
@@ -18,6 +19,8 @@ export const ScanReceipt = () => {
   const [description, setDescription] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { addTransaction } = useTransactions();
+  const { expenseCategories } = useCategories();
+  const { settings } = useSettings();
   const { toast } = useToast();
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,7 +47,7 @@ export const ScanReceipt = () => {
     
     toast({
       title: "Reçu scanné !",
-      description: `Montant détecté: ${simulatedAmount}€`,
+      description: `Montant détecté: ${simulatedAmount} ${settings.currencySymbol}`,
     });
   };
 
@@ -156,7 +159,7 @@ export const ScanReceipt = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="amount">Montant détecté (€)</Label>
+            <Label htmlFor="amount">Montant détecté ({settings.currencySymbol})</Label>
             <Input
               id="amount"
               type="number"
@@ -178,7 +181,7 @@ export const ScanReceipt = () => {
                 <SelectValue placeholder="Sélectionnez une catégorie" />
               </SelectTrigger>
               <SelectContent>
-                {EXPENSE_CATEGORIES.map((cat) => (
+                {expenseCategories.map((cat) => (
                   <SelectItem key={cat.id} value={cat.id}>
                     <div className="flex items-center gap-2">
                       <span>{cat.icon}</span>

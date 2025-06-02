@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTransactions } from "@/hooks/useTransactions";
-import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "@/types";
+import { useCategories } from "@/hooks/useCategories";
+import { useSettings } from "@/hooks/useSettings";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -17,6 +18,8 @@ export const AddExpense = () => {
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
   const { addTransaction } = useTransactions();
+  const { expenseCategories, incomeCategories } = useCategories();
+  const { settings } = useSettings();
   const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -60,7 +63,7 @@ export const AddExpense = () => {
     setDescription('');
   };
 
-  const categories = type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
+  const categories = type === 'expense' ? expenseCategories : incomeCategories;
 
   return (
     <Card className="max-w-2xl mx-auto shadow-lg">
@@ -80,7 +83,7 @@ export const AddExpense = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="amount">Montant (€)</Label>
+            <Label htmlFor="amount">Montant ({settings.currencySymbol})</Label>
             <Input
               id="amount"
               type="number"

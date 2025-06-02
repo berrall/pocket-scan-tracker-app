@@ -1,12 +1,15 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTransactions } from "@/hooks/useTransactions";
-import { EXPENSE_CATEGORIES } from "@/types";
+import { useCategories } from "@/hooks/useCategories";
+import { useSettings } from "@/hooks/useSettings";
 import { Wallet, Receipt, Euro } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 export const Dashboard = () => {
   const { getTotalIncome, getTotalExpenses, getBalance, getExpensesByCategory, transactions } = useTransactions();
+  const { expenseCategories } = useCategories();
+  const { settings } = useSettings();
 
   const balance = getBalance();
   const totalIncome = getTotalIncome();
@@ -14,7 +17,7 @@ export const Dashboard = () => {
   const expensesByCategory = getExpensesByCategory();
 
   const pieData = Object.entries(expensesByCategory).map(([categoryId, amount]) => {
-    const category = EXPENSE_CATEGORIES.find(c => c.id === categoryId);
+    const category = expenseCategories.find(c => c.id === categoryId);
     return {
       name: category?.name || categoryId,
       value: amount,
@@ -26,6 +29,8 @@ export const Dashboard = () => {
 
   const recentTransactions = transactions.slice(0, 5);
 
+  const formatAmount = (amount: number) => `${amount.toFixed(2)} ${settings.currencySymbol}`;
+
   return (
     <div className="space-y-6">
       {/* Cartes de résumé */}
@@ -36,7 +41,7 @@ export const Dashboard = () => {
             <Wallet className="h-4 w-4 opacity-90" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalIncome.toFixed(2)} €</div>
+            <div className="text-2xl font-bold">{formatAmount(totalIncome)}</div>
           </CardContent>
         </Card>
 
@@ -46,7 +51,7 @@ export const Dashboard = () => {
             <Receipt className="h-4 w-4 opacity-90" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalExpenses.toFixed(2)} €</div>
+            <div className="text-2xl font-bold">{formatAmount(totalExpenses)}</div>
           </CardContent>
         </Card>
 
@@ -56,7 +61,7 @@ export const Dashboard = () => {
             <Euro className="h-4 w-4 opacity-90" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{balance.toFixed(2)} €</div>
+            <div className="text-2xl font-bold">{formatAmount(balance)}</div>
           </CardContent>
         </Card>
       </div>
@@ -77,7 +82,7 @@ export const Dashboard = () => {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, value, emoji }) => `${emoji} ${name}: ${value.toFixed(2)}€`}
+                    label={({ name, value, emoji }) => `${emoji} ${name}: ${formatAmount(value)}`}
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
@@ -86,7 +91,7 @@ export const Dashboard = () => {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value: number) => [`${value.toFixed(2)} €`, 'Montant']} />
+                  <Tooltip formatter={(value: number) => [formatAmount(value), 'Montant']} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
@@ -112,7 +117,7 @@ export const Dashboard = () => {
                       <p className="text-xs text-gray-500">{transaction.date.toLocaleDateString()}</p>
                     </div>
                     <div className={`font-bold ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                      {transaction.type === 'income' ? '+' : '-'}{transaction.amount.toFixed(2)} €
+                      {transaction.type === 'income' ? '+' : '-'}{formatAmount(transaction.amount)}
                     </div>
                   </div>
                 ))}
