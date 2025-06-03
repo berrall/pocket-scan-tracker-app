@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,13 +6,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTransactions } from "@/hooks/useTransactions";
 import { useCategories } from "@/hooks/useCategories";
 import { useSettings } from "@/hooks/useSettings";
+import { useBankAccounts } from "@/hooks/useBankAccounts";
+import { useBankInstitutions } from "@/hooks/useBankInstitutions";
 import { Receipt, Wallet, Search, X, Building } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { BANK_ACCOUNT_TYPES, BANK_INSTITUTIONS } from "@/types";
 
 export const TransactionHistory = () => {
   const { transactions, deleteTransaction } = useTransactions();
   const { expenseCategories, incomeCategories } = useCategories();
+  const { bankAccountTypes } = useBankAccounts();
+  const { bankInstitutions } = useBankInstitutions();
   const { settings } = useSettings();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
@@ -47,11 +49,11 @@ export const TransactionHistory = () => {
   };
 
   const getBankAccountTypeName = (typeId: string) => {
-    return BANK_ACCOUNT_TYPES.find(type => type.id === typeId)?.name || typeId;
+    return bankAccountTypes.find(type => type.id === typeId)?.name || typeId;
   };
 
   const getBankInstitutionName = (bankId: string) => {
-    return BANK_INSTITUTIONS.find(bank => bank.id === bankId)?.name || bankId;
+    return bankInstitutions.find(bank => bank.id === bankId)?.name || bankId;
   };
 
   const formatAmount = (amount: number) => `${amount.toFixed(2)} ${settings.currencySymbol}`;

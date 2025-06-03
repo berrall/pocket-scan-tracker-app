@@ -8,9 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTransactions } from "@/hooks/useTransactions";
 import { useCategories } from "@/hooks/useCategories";
 import { useSettings } from "@/hooks/useSettings";
+import { useBankAccounts } from "@/hooks/useBankAccounts";
+import { useBankInstitutions } from "@/hooks/useBankInstitutions";
 import { useToast } from "@/hooks/use-toast";
 import { Camera, Upload, X } from "lucide-react";
-import { BANK_ACCOUNT_TYPES, BANK_INSTITUTIONS } from "@/types";
 
 export const ScanReceipt = () => {
   const [image, setImage] = useState<string | null>(null);
@@ -22,6 +23,8 @@ export const ScanReceipt = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { addTransaction } = useTransactions();
   const { expenseCategories } = useCategories();
+  const { bankAccountTypes } = useBankAccounts();
+  const { bankInstitutions } = useBankInstitutions();
   const { settings } = useSettings();
   const { toast } = useToast();
 
@@ -207,7 +210,7 @@ export const ScanReceipt = () => {
                   <SelectValue placeholder="Sélectionnez le type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {BANK_ACCOUNT_TYPES.map((type) => (
+                  {bankAccountTypes.map((type) => (
                     <SelectItem key={type.id} value={type.id}>
                       {type.name}
                     </SelectItem>
@@ -223,7 +226,7 @@ export const ScanReceipt = () => {
                   <SelectValue placeholder="Sélectionnez la banque" />
                 </SelectTrigger>
                 <SelectContent>
-                  {BANK_INSTITUTIONS.map((bank) => (
+                  {bankInstitutions.map((bank) => (
                     <SelectItem key={bank.id} value={bank.id}>
                       {bank.name}
                     </SelectItem>

@@ -8,7 +8,8 @@ import { ScanReceipt } from "@/components/ScanReceipt";
 import { TransactionHistory } from "@/components/TransactionHistory";
 import { Settings } from "@/components/Settings";
 import { CategoryManager } from "@/components/CategoryManager";
-import { Wallet, Receipt, Camera, History, Settings as SettingsIcon, Tag } from "lucide-react";
+import { BankManager } from "@/components/BankManager";
+import { Wallet, Receipt, Camera, History, Settings as SettingsIcon, Tag, Building } from "lucide-react";
 
 const Index = () => {
   return (
@@ -23,7 +24,7 @@ const Index = () => {
         </div>
 
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 mb-8 bg-white/80 backdrop-blur-sm">
+          <TabsList className="grid w-full grid-cols-7 mb-8 bg-white/80 backdrop-blur-sm">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <Wallet size={16} />
               Tableau de bord
@@ -43,6 +44,10 @@ const Index = () => {
             <TabsTrigger value="categories" className="flex items-center gap-2">
               <Tag size={16} />
               Catégories
+            </TabsTrigger>
+            <TabsTrigger value="banks" className="flex items-center gap-2">
+              <Building size={16} />
+              Banques
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2">
               <SettingsIcon size={16} />
@@ -68,6 +73,10 @@ const Index = () => {
 
           <TabsContent value="categories">
             <CategoryManager />
+          </TabsContent>
+
+          <TabsContent value="banks">
+            <BankManager />
           </TabsContent>
 
           <TabsContent value="settings">

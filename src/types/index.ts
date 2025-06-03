@@ -1,3 +1,4 @@
+
 export interface Transaction {
   id: string;
   type: 'expense' | 'income';
@@ -15,6 +16,16 @@ export interface Category {
   name: string;
   icon: string;
   color: string;
+}
+
+export interface BankAccountType {
+  id: string;
+  name: string;
+}
+
+export interface BankInstitution {
+  id: string;
+  name: string;
 }
 
 export interface Settings {
@@ -36,7 +47,7 @@ export const CURRENCY_OPTIONS = [
   { code: 'JPY', symbol: '¥', name: 'Yen japonais' },
 ];
 
-export const BANK_ACCOUNT_TYPES = [
+export const DEFAULT_BANK_ACCOUNT_TYPES: BankAccountType[] = [
   { id: 'checking', name: 'Compte courant' },
   { id: 'savings', name: 'Compte épargne' },
   { id: 'credit', name: 'Carte de crédit' },
@@ -46,7 +57,7 @@ export const BANK_ACCOUNT_TYPES = [
   { id: 'other', name: 'Autre' },
 ];
 
-export const BANK_INSTITUTIONS = [
+export const DEFAULT_BANK_INSTITUTIONS: BankInstitution[] = [
   { id: 'bnp', name: 'BNP Paribas' },
   { id: 'credit_agricole', name: 'Crédit Agricole' },
   { id: 'societe_generale', name: 'Société Générale' },
@@ -82,3 +93,5 @@ export const DEFAULT_INCOME_CATEGORIES: Category[] = [
 // Exports pour compatibilité
 export const EXPENSE_CATEGORIES = DEFAULT_EXPENSE_CATEGORIES;
 export const INCOME_CATEGORIES = DEFAULT_INCOME_CATEGORIES;
+export const BANK_ACCOUNT_TYPES = DEFAULT_BANK_ACCOUNT_TYPES;
+export const BANK_INSTITUTIONS = DEFAULT_BANK_INSTITUTIONS;

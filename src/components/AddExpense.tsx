@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTransactions } from "@/hooks/useTransactions";
 import { useCategories } from "@/hooks/useCategories";
 import { useSettings } from "@/hooks/useSettings";
+import { useBankAccounts } from "@/hooks/useBankAccounts";
+import { useBankInstitutions } from "@/hooks/useBankInstitutions";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BANK_ACCOUNT_TYPES, BANK_INSTITUTIONS } from "@/types";
@@ -22,6 +23,8 @@ export const AddExpense = () => {
   const [bankInstitution, setBankInstitution] = useState('');
   const { addTransaction } = useTransactions();
   const { expenseCategories, incomeCategories } = useCategories();
+  const { bankAccountTypes } = useBankAccounts();
+  const { bankInstitutions } = useBankInstitutions();
   const { settings } = useSettings();
   const { toast } = useToast();
 
@@ -129,7 +132,7 @@ export const AddExpense = () => {
                   <SelectValue placeholder="Sélectionnez le type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {BANK_ACCOUNT_TYPES.map((type) => (
+                  {bankAccountTypes.map((type) => (
                     <SelectItem key={type.id} value={type.id}>
                       {type.name}
                     </SelectItem>
@@ -145,7 +148,7 @@ export const AddExpense = () => {
                   <SelectValue placeholder="Sélectionnez la banque" />
                 </SelectTrigger>
                 <SelectContent>
-                  {BANK_INSTITUTIONS.map((bank) => (
+                  {bankInstitutions.map((bank) => (
                     <SelectItem key={bank.id} value={bank.id}>
                       {bank.name}
                     </SelectItem>
