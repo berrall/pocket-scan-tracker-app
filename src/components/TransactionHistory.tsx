@@ -7,8 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTransactions } from "@/hooks/useTransactions";
 import { useCategories } from "@/hooks/useCategories";
 import { useSettings } from "@/hooks/useSettings";
-import { Receipt, Wallet, Search, X } from "lucide-react";
+import { Receipt, Wallet, Search, X, Building } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { BANK_ACCOUNT_TYPES, BANK_INSTITUTIONS } from "@/types";
 
 export const TransactionHistory = () => {
   const { transactions, deleteTransaction } = useTransactions();
@@ -43,6 +44,14 @@ export const TransactionHistory = () => {
       icon: '📝',
       color: 'bg-gray-100 text-gray-700'
     };
+  };
+
+  const getBankAccountTypeName = (typeId: string) => {
+    return BANK_ACCOUNT_TYPES.find(type => type.id === typeId)?.name || typeId;
+  };
+
+  const getBankInstitutionName = (bankId: string) => {
+    return BANK_INSTITUTIONS.find(bank => bank.id === bankId)?.name || bankId;
   };
 
   const formatAmount = (amount: number) => `${amount.toFixed(2)} ${settings.currencySymbol}`;
@@ -125,6 +134,16 @@ export const TransactionHistory = () => {
                         <p className="text-sm text-gray-500">
                           {categoryInfo.name} • {transaction.date.toLocaleDateString('fr-FR')}
                         </p>
+                        {(transaction.bankAccountType || transaction.bankInstitution) && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <Building className="h-3 w-3 text-gray-400" />
+                            <p className="text-xs text-gray-400">
+                              {transaction.bankAccountType && getBankAccountTypeName(transaction.bankAccountType)}
+                              {transaction.bankAccountType && transaction.bankInstitution && ' • '}
+                              {transaction.bankInstitution && getBankInstitutionName(transaction.bankInstitution)}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
 

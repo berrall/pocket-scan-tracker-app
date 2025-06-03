@@ -11,12 +11,15 @@ import { useCategories } from "@/hooks/useCategories";
 import { useSettings } from "@/hooks/useSettings";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BANK_ACCOUNT_TYPES, BANK_INSTITUTIONS } from "@/types";
 
 export const AddExpense = () => {
   const [type, setType] = useState<'expense' | 'income'>('expense');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
+  const [bankAccountType, setBankAccountType] = useState('');
+  const [bankInstitution, setBankInstitution] = useState('');
   const { addTransaction } = useTransactions();
   const { expenseCategories, incomeCategories } = useCategories();
   const { settings } = useSettings();
@@ -28,7 +31,7 @@ export const AddExpense = () => {
     if (!amount || !category || !description) {
       toast({
         title: "Erreur",
-        description: "Veuillez remplir tous les champs",
+        description: "Veuillez remplir tous les champs obligatoires",
         variant: "destructive",
       });
       return;
@@ -50,6 +53,8 @@ export const AddExpense = () => {
       category,
       description,
       date: new Date(),
+      bankAccountType: bankAccountType || undefined,
+      bankInstitution: bankInstitution || undefined,
     });
 
     toast({
@@ -61,6 +66,8 @@ export const AddExpense = () => {
     setAmount('');
     setCategory('');
     setDescription('');
+    setBankAccountType('');
+    setBankInstitution('');
   };
 
   const categories = type === 'expense' ? expenseCategories : incomeCategories;
@@ -83,7 +90,7 @@ export const AddExpense = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="amount">Montant ({settings.currencySymbol})</Label>
+            <Label htmlFor="amount">Montant ({settings.currencySymbol}) *</Label>
             <Input
               id="amount"
               type="number"
@@ -96,7 +103,7 @@ export const AddExpense = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category">Catégorie</Label>
+            <Label htmlFor="category">Catégorie *</Label>
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionnez une catégorie" />
@@ -114,8 +121,42 @@ export const AddExpense = () => {
             </Select>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="bankAccountType">Type de compte</Label>
+              <Select value={bankAccountType} onValueChange={setBankAccountType}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionnez le type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {BANK_ACCOUNT_TYPES.map((type) => (
+                    <SelectItem key={type.id} value={type.id}>
+                      {type.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="bankInstitution">Institution bancaire</Label>
+              <Select value={bankInstitution} onValueChange={setBankInstitution}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionnez la banque" />
+                </SelectTrigger>
+                <SelectContent>
+                  {BANK_INSTITUTIONS.map((bank) => (
+                    <SelectItem key={bank.id} value={bank.id}>
+                      {bank.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">Description *</Label>
             <Textarea
               id="description"
               placeholder="Décrivez la transaction..."

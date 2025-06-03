@@ -1,4 +1,3 @@
-
 export interface Transaction {
   id: string;
   type: 'expense' | 'income';
@@ -7,6 +6,8 @@ export interface Transaction {
   description: string;
   date: Date;
   receipt?: string; // base64 image data
+  bankAccountType?: string;
+  bankInstitution?: string;
 }
 
 export interface Category {
@@ -33,6 +34,31 @@ export const CURRENCY_OPTIONS = [
   { code: 'CHF', symbol: 'CHF', name: 'Franc suisse' },
   { code: 'CAD', symbol: 'C$', name: 'Dollar canadien' },
   { code: 'JPY', symbol: '¥', name: 'Yen japonais' },
+];
+
+export const BANK_ACCOUNT_TYPES = [
+  { id: 'checking', name: 'Compte courant' },
+  { id: 'savings', name: 'Compte épargne' },
+  { id: 'credit', name: 'Carte de crédit' },
+  { id: 'debit', name: 'Carte de débit' },
+  { id: 'business', name: 'Compte professionnel' },
+  { id: 'investment', name: 'Compte d\'investissement' },
+  { id: 'other', name: 'Autre' },
+];
+
+export const BANK_INSTITUTIONS = [
+  { id: 'bnp', name: 'BNP Paribas' },
+  { id: 'credit_agricole', name: 'Crédit Agricole' },
+  { id: 'societe_generale', name: 'Société Générale' },
+  { id: 'lcl', name: 'LCL' },
+  { id: 'credit_mutuel', name: 'Crédit Mutuel' },
+  { id: 'la_banque_postale', name: 'La Banque Postale' },
+  { id: 'caisse_depargne', name: 'Caisse d\'Épargne' },
+  { id: 'boursorama', name: 'Boursorama Banque' },
+  { id: 'ing', name: 'ING Direct' },
+  { id: 'revolut', name: 'Revolut' },
+  { id: 'n26', name: 'N26' },
+  { id: 'other', name: 'Autre' },
 ];
 
 export const DEFAULT_EXPENSE_CATEGORIES: Category[] = [
