@@ -1,58 +1,80 @@
 
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/hooks/useAuth";
+import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { Dashboard } from "@/components/Dashboard";
 import { AddExpense } from "@/components/AddExpense";
-import { ScanReceipt } from "@/components/ScanReceipt";
 import { TransactionHistory } from "@/components/TransactionHistory";
 import { Settings } from "@/components/Settings";
-import { CategoryManager } from "@/components/CategoryManager";
-import { BankManager } from "@/components/BankManager";
-import { Wallet, Receipt, Camera, History, Settings as SettingsIcon, Tag, Building } from "lucide-react";
+import { LogOut, User, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-      <div className="container mx-auto p-4 max-w-6xl">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-3">
-            <Wallet className="text-blue-600" />
-            Gestion Familiale
-          </h1>
-          <p className="text-gray-600 text-lg">Suivez vos dépenses et revenus en toute simplicité</p>
-        </div>
+  const { user, signOut } = useAuth();
+  const { loading } = useSupabaseData();
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("dashboard");
 
-        <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-7 mb-8 bg-white/80 backdrop-blur-sm">
-            <TabsTrigger value="dashboard" className="flex items-center gap-2">
-              <Wallet size={16} />
-              Tableau de bord
-            </TabsTrigger>
-            <TabsTrigger value="add" className="flex items-center gap-2">
-              <Receipt size={16} />
-              Ajouter
-            </TabsTrigger>
-            <TabsTrigger value="scan" className="flex items-center gap-2">
-              <Camera size={16} />
-              Scanner
-            </TabsTrigger>
-            <TabsTrigger value="history" className="flex items-center gap-2">
-              <History size={16} />
-              Historique
-            </TabsTrigger>
-            <TabsTrigger value="categories" className="flex items-center gap-2">
-              <Tag size={16} />
-              Catégories
-            </TabsTrigger>
-            <TabsTrigger value="banks" className="flex items-center gap-2">
-              <Building size={16} />
-              Banques
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2">
-              <SettingsIcon size={16} />
-              Paramètres
-            </TabsTrigger>
+  const handleSignOut = async () => {
+    await signOut();
+    toast({
+      title: "Déconnexion",
+      description: "Vous êtes maintenant déconnecté",
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Chargement de vos données...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <h1 className="text-xl font-semibold text-gray-900">
+              Gestion Finances Personnelle
+            </h1>
+            
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <User className="h-4 w-4" />
+                <span>{user?.email}</span>
+              </div>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSignOut}
+                className="flex items-center gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Déconnexion
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="dashboard">Tableau de bord</TabsTrigger>
+            <TabsTrigger value="add">Ajouter</TabsTrigger>
+            <TabsTrigger value="history">Historique</TabsTrigger>
+            <TabsTrigger value="settings">Paramètres</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
@@ -63,27 +85,15 @@ const Index = () => {
             <AddExpense />
           </TabsContent>
 
-          <TabsContent value="scan">
-            <ScanReceipt />
-          </TabsContent>
-
           <TabsContent value="history">
             <TransactionHistory />
-          </TabsContent>
-
-          <TabsContent value="categories">
-            <CategoryManager />
-          </TabsContent>
-
-          <TabsContent value="banks">
-            <BankManager />
           </TabsContent>
 
           <TabsContent value="settings">
             <Settings />
           </TabsContent>
         </Tabs>
-      </div>
+      </main>
     </div>
   );
 };
