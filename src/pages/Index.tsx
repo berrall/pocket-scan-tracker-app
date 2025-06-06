@@ -9,6 +9,7 @@ import { Dashboard } from "@/components/Dashboard";
 import { AddExpense } from "@/components/AddExpense";
 import { TransactionHistory } from "@/components/TransactionHistory";
 import { Settings } from "@/components/Settings";
+import { BankManager } from "@/components/BankManager";
 import { LogOut, User, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -70,10 +71,11 @@ const Index = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="dashboard">Tableau de bord</TabsTrigger>
             <TabsTrigger value="add">Ajouter</TabsTrigger>
             <TabsTrigger value="history">Historique</TabsTrigger>
+            <TabsTrigger value="banks">Banques</TabsTrigger>
             <TabsTrigger value="settings">Paramètres</TabsTrigger>
           </TabsList>
 
@@ -87,6 +89,10 @@ const Index = () => {
 
           <TabsContent value="history">
             <TransactionHistory />
+          </TabsContent>
+
+          <TabsContent value="banks">
+            <BankManager />
           </TabsContent>
 
           <TabsContent value="settings">

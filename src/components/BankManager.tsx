@@ -6,14 +6,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useBankAccounts } from "@/hooks/useBankAccounts";
-import { useBankInstitutions } from "@/hooks/useBankInstitutions";
+import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { useToast } from "@/hooks/use-toast";
 import { Building, CreditCard, Plus, Edit, Trash2 } from "lucide-react";
 
 export const BankManager = () => {
-  const { bankAccountTypes, addBankAccountType, updateBankAccountType, deleteBankAccountType } = useBankAccounts();
-  const { bankInstitutions, addBankInstitution, updateBankInstitution, deleteBankInstitution } = useBankInstitutions();
+  const { 
+    bankAccountTypes, 
+    bankInstitutions,
+    addBankAccountType, 
+    updateBankAccountType, 
+    deleteBankAccountType,
+    addBankInstitution,
+    updateBankInstitution,
+    deleteBankInstitution
+  } = useSupabaseData();
   const { toast } = useToast();
 
   const [newAccountTypeName, setNewAccountTypeName] = useState('');
@@ -21,7 +28,7 @@ export const BankManager = () => {
   const [editingAccountType, setEditingAccountType] = useState<{ id: string; name: string } | null>(null);
   const [editingInstitution, setEditingInstitution] = useState<{ id: string; name: string } | null>(null);
 
-  const handleAddAccountType = () => {
+  const handleAddAccountType = async () => {
     if (!newAccountTypeName.trim()) {
       toast({
         title: "Erreur",
@@ -31,15 +38,23 @@ export const BankManager = () => {
       return;
     }
 
-    addBankAccountType({ name: newAccountTypeName.trim() });
-    setNewAccountTypeName('');
-    toast({
-      title: "Succès",
-      description: "Type de compte bancaire ajouté",
-    });
+    try {
+      await addBankAccountType({ name: newAccountTypeName.trim() });
+      setNewAccountTypeName('');
+      toast({
+        title: "Succès",
+        description: "Type de compte bancaire ajouté",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de l'ajout du type de compte",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleAddInstitution = () => {
+  const handleAddInstitution = async () => {
     if (!newInstitutionName.trim()) {
       toast({
         title: "Erreur",
@@ -49,50 +64,90 @@ export const BankManager = () => {
       return;
     }
 
-    addBankInstitution({ name: newInstitutionName.trim() });
-    setNewInstitutionName('');
-    toast({
-      title: "Succès",
-      description: "Institution bancaire ajoutée",
-    });
+    try {
+      await addBankInstitution({ name: newInstitutionName.trim() });
+      setNewInstitutionName('');
+      toast({
+        title: "Succès",
+        description: "Institution bancaire ajoutée",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de l'ajout de l'institution",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleUpdateAccountType = () => {
+  const handleUpdateAccountType = async () => {
     if (!editingAccountType || !editingAccountType.name.trim()) return;
 
-    updateBankAccountType(editingAccountType.id, { name: editingAccountType.name.trim() });
-    setEditingAccountType(null);
-    toast({
-      title: "Succès",
-      description: "Type de compte bancaire modifié",
-    });
+    try {
+      await updateBankAccountType(editingAccountType.id, { name: editingAccountType.name.trim() });
+      setEditingAccountType(null);
+      toast({
+        title: "Succès",
+        description: "Type de compte bancaire modifié",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la modification",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleUpdateInstitution = () => {
+  const handleUpdateInstitution = async () => {
     if (!editingInstitution || !editingInstitution.name.trim()) return;
 
-    updateBankInstitution(editingInstitution.id, { name: editingInstitution.name.trim() });
-    setEditingInstitution(null);
-    toast({
-      title: "Succès",
-      description: "Institution bancaire modifiée",
-    });
+    try {
+      await updateBankInstitution(editingInstitution.id, { name: editingInstitution.name.trim() });
+      setEditingInstitution(null);
+      toast({
+        title: "Succès",
+        description: "Institution bancaire modifiée",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la modification",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDeleteAccountType = (id: string, name: string) => {
-    deleteBankAccountType(id);
-    toast({
-      title: "Succès",
-      description: `Type de compte "${name}" supprimé`,
-    });
+  const handleDeleteAccountType = async (id: string, name: string) => {
+    try {
+      await deleteBankAccountType(id);
+      toast({
+        title: "Succès",
+        description: `Type de compte "${name}" supprimé`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la suppression",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDeleteInstitution = (id: string, name: string) => {
-    deleteBankInstitution(id);
-    toast({
-      title: "Succès",
-      description: `Institution "${name}" supprimée`,
-    });
+  const handleDeleteInstitution = async (id: string, name: string) => {
+    try {
+      await deleteBankInstitution(id);
+      toast({
+        title: "Succès",
+        description: `Institution "${name}" supprimée`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la suppression",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

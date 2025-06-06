@@ -83,7 +83,15 @@ export const useSupabaseData = () => {
       return;
     }
 
-    setCategories(data || []);
+    const formattedCategories = (data || []).map(cat => ({
+      id: cat.id,
+      name: cat.name,
+      icon: cat.icon,
+      color: cat.color,
+      type: cat.type as 'expense' | 'income'
+    }));
+
+    setCategories(formattedCategories);
   };
 
   const loadTransactions = async () => {
@@ -98,8 +106,14 @@ export const useSupabaseData = () => {
     }
 
     const formattedTransactions = (data || []).map(t => ({
-      ...t,
-      date: new Date(t.date)
+      id: t.id,
+      type: t.type as 'expense' | 'income',
+      amount: t.amount,
+      category: t.category,
+      description: t.description,
+      date: new Date(t.date),
+      bank_account_type: t.bank_account_type || undefined,
+      bank_institution: t.bank_institution || undefined
     }));
 
     setTransactions(formattedTransactions);
@@ -156,9 +170,15 @@ export const useSupabaseData = () => {
       throw error;
     }
 
-    const newTransaction = {
-      ...data,
-      date: new Date(data.date)
+    const newTransaction: Transaction = {
+      id: data.id,
+      type: data.type as 'expense' | 'income',
+      amount: data.amount,
+      category: data.category,
+      description: data.description,
+      date: new Date(data.date),
+      bank_account_type: data.bank_account_type || undefined,
+      bank_institution: data.bank_institution || undefined
     };
 
     setTransactions(prev => [newTransaction, ...prev]);
@@ -177,6 +197,110 @@ export const useSupabaseData = () => {
     }
 
     setTransactions(prev => prev.filter(t => t.id !== id));
+  };
+
+  // Bank Account Types methods
+  const addBankAccountType = async (bankAccountType: Omit<BankAccountType, 'id'>) => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('bank_account_types')
+      .insert([{
+        user_id: user.id,
+        name: bankAccountType.name
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error adding bank account type:', error);
+      throw error;
+    }
+
+    setBankAccountTypes(prev => [...prev, data]);
+    return data;
+  };
+
+  const updateBankAccountType = async (id: string, updates: Partial<BankAccountType>) => {
+    const { error } = await supabase
+      .from('bank_account_types')
+      .update(updates)
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error updating bank account type:', error);
+      throw error;
+    }
+
+    setBankAccountTypes(prev =>
+      prev.map(type => type.id === id ? { ...type, ...updates } : type)
+    );
+  };
+
+  const deleteBankAccountType = async (id: string) => {
+    const { error } = await supabase
+      .from('bank_account_types')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting bank account type:', error);
+      throw error;
+    }
+
+    setBankAccountTypes(prev => prev.filter(type => type.id !== id));
+  };
+
+  // Bank Institutions methods
+  const addBankInstitution = async (bankInstitution: Omit<BankInstitution, 'id'>) => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('bank_institutions')
+      .insert([{
+        user_id: user.id,
+        name: bankInstitution.name
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error adding bank institution:', error);
+      throw error;
+    }
+
+    setBankInstitutions(prev => [...prev, data]);
+    return data;
+  };
+
+  const updateBankInstitution = async (id: string, updates: Partial<BankInstitution>) => {
+    const { error } = await supabase
+      .from('bank_institutions')
+      .update(updates)
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error updating bank institution:', error);
+      throw error;
+    }
+
+    setBankInstitutions(prev =>
+      prev.map(institution => institution.id === id ? { ...institution, ...updates } : institution)
+    );
+  };
+
+  const deleteBankInstitution = async (id: string) => {
+    const { error } = await supabase
+      .from('bank_institutions')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting bank institution:', error);
+      throw error;
+    }
+
+    setBankInstitutions(prev => prev.filter(institution => institution.id !== id));
   };
 
   // Calculated values
@@ -215,6 +339,12 @@ export const useSupabaseData = () => {
     bankInstitutions,
     addTransaction,
     deleteTransaction,
+    addBankAccountType,
+    updateBankAccountType,
+    deleteBankAccountType,
+    addBankInstitution,
+    updateBankInstitution,
+    deleteBankInstitution,
     getTotalIncome,
     getTotalExpenses,
     getBalance,
