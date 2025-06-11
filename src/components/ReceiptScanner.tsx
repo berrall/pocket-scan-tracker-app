@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
 import { useToast } from "@/hooks/use-toast";
-import { Camera, Upload, X, Scan, CheckCircle } from "lucide-react";
+import { Camera, Upload, X, Scan, CheckCircle, AlertCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ReceiptData {
   storeName: string;
@@ -17,6 +18,7 @@ interface ReceiptData {
   taxes: number;
   total: number;
   items: string[];
+  confidence: number;
 }
 
 export const ReceiptScanner = () => {
@@ -52,60 +54,40 @@ export const ReceiptScanner = () => {
     setIsScanning(true);
     
     try {
-      // Simulate OCR processing with realistic receipt data
-      // In a real implementation, you would use an OCR service like Google Vision API,
-      // Tesseract.js, or a specialized receipt parsing service
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Convert base64 to blob for the API call
+      const base64Data = image.split(',')[1];
       
-      const mockReceiptData: ReceiptData = {
-        storeName: getRandomStoreName(),
-        date: new Date().toISOString().split('T')[0],
-        subtotal: parseFloat((Math.random() * 100 + 20).toFixed(2)),
-        taxes: 0,
-        total: 0,
-        items: getRandomItems()
-      };
-      
-      // Calculate taxes (assume 13% HST for Canada or varying rates for other countries)
-      mockReceiptData.taxes = parseFloat((mockReceiptData.subtotal * 0.13).toFixed(2));
-      mockReceiptData.total = parseFloat((mockReceiptData.subtotal + mockReceiptData.taxes).toFixed(2));
-      
-      setScannedData(mockReceiptData);
-      
-      toast({
-        title: "Reçu scanné avec succès !",
-        description: `Magasin: ${mockReceiptData.storeName}, Total: ${mockReceiptData.total.toFixed(2)} $`,
+      const { data, error } = await supabase.functions.invoke('scan-receipt', {
+        body: { 
+          imageData: base64Data,
+          mimeType: 'image/jpeg'
+        }
       });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data && data.receiptData) {
+        setScannedData(data.receiptData);
+        
+        toast({
+          title: "Reçu scanné avec succès !",
+          description: `Magasin: ${data.receiptData.storeName}, Total: ${data.receiptData.total.toFixed(2)} $`,
+        });
+      } else {
+        throw new Error("Aucune donnée de reçu trouvée");
+      }
     } catch (error) {
       console.error('Error scanning receipt:', error);
       toast({
         title: "Erreur",
-        description: "Erreur lors du scan du reçu. Veuillez réessayer.",
+        description: "Erreur lors du scan du reçu. Veuillez réessayer ou vérifier la qualité de l'image.",
         variant: "destructive",
       });
     } finally {
       setIsScanning(false);
     }
-  };
-
-  const getRandomStoreName = (): string => {
-    const stores = [
-      "Metro", "Loblaws", "Sobeys", "IGA", "Walmart", "Costco",
-      "Canadian Tire", "Home Depot", "Best Buy", "Pharmaprix",
-      "Target", "CVS Pharmacy", "Walgreens", "Kroger", "Safeway",
-      "Whole Foods", "Trader Joe's", "IKEA", "Staples"
-    ];
-    return stores[Math.floor(Math.random() * stores.length)];
-  };
-
-  const getRandomItems = (): string[] => {
-    const items = [
-      "Pain de blé entier", "Lait 2%", "Bananes", "Pommes", "Yogourt grec",
-      "Fromage cheddar", "Œufs biologiques", "Bœuf haché", "Poulet", "Saumon",
-      "Salade César", "Tomates", "Concombres", "Biscuits", "Céréales"
-    ];
-    const numItems = Math.floor(Math.random() * 5) + 2;
-    return items.slice(0, numItems);
   };
 
   const handleAddTransaction = async () => {
@@ -166,10 +148,10 @@ export const ReceiptScanner = () => {
       <CardHeader>
         <CardTitle className="text-2xl flex items-center gap-2">
           <Scan className="text-blue-600" />
-          Scanner un reçu
+          Scanner un reçu avec IA
         </CardTitle>
         <CardDescription>
-          Scannez votre reçu pour extraire automatiquement les informations et ajouter la dépense
+          Utilisez l'IA de Google pour extraire automatiquement les informations de votre reçu
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -222,12 +204,12 @@ export const ReceiptScanner = () => {
                 {isScanning ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Scan en cours...
+                    Analyse en cours avec IA...
                   </>
                 ) : (
                   <>
                     <Camera className="mr-2 h-4 w-4" />
-                    Scanner le reçu
+                    Scanner avec IA
                   </>
                 )}
               </Button>
@@ -240,7 +222,12 @@ export const ReceiptScanner = () => {
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <CheckCircle className="h-5 w-5 text-green-600" />
-                  <h3 className="font-semibold text-green-800">Informations extraites</h3>
+                  <h3 className="font-semibold text-green-800">Informations extraites par IA</h3>
+                  {scannedData.confidence && (
+                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                      Confiance: {Math.round(scannedData.confidence * 100)}%
+                    </span>
+                  )}
                 </div>
                 
                 <div className="space-y-2 text-sm">
@@ -265,14 +252,19 @@ export const ReceiptScanner = () => {
                     <span className="font-bold">{scannedData.total.toFixed(2)} $</span>
                   </div>
                   
-                  <div className="mt-3">
-                    <span className="font-medium">Articles:</span>
-                    <ul className="list-disc list-inside mt-1 text-xs">
-                      {scannedData.items.map((item, index) => (
-                        <li key={index}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
+                  {scannedData.items.length > 0 && (
+                    <div className="mt-3">
+                      <span className="font-medium">Articles détectés:</span>
+                      <ul className="list-disc list-inside mt-1 text-xs">
+                        {scannedData.items.slice(0, 5).map((item, index) => (
+                          <li key={index}>{item}</li>
+                        ))}
+                        {scannedData.items.length > 5 && (
+                          <li className="text-gray-500">... et {scannedData.items.length - 5} autres</li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -347,12 +339,16 @@ export const ReceiptScanner = () => {
 
         {/* Info Section */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
-          <h4 className="font-semibold text-blue-800 mb-2">À propos du scanner de reçus</h4>
+          <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
+            <AlertCircle className="h-4 w-4" />
+            Scanner IA avancé
+          </h4>
           <div className="text-sm text-blue-700 space-y-1">
-            <p>• <strong>Formats supportés:</strong> Reçus du Canada, États-Unis et autres pays</p>
-            <p>• <strong>Informations extraites:</strong> Nom du magasin, date, taxes, total, articles</p>
-            <p>• <strong>Calcul automatique:</strong> Taxes calculées selon les taux régionaux</p>
-            <p>• <strong>Précision:</strong> Vérifiez toujours les données extraites avant d'ajouter la transaction</p>
+            <p>• <strong>IA Google Vision:</strong> Reconnaissance optique de caractères (OCR) avancée</p>
+            <p>• <strong>IA Gemini:</strong> Analyse intelligente et extraction structurée des données</p>
+            <p>• <strong>Support international:</strong> Reçus du Canada, États-Unis, Europe et autres pays</p>
+            <p>• <strong>Détection automatique:</strong> Nom du magasin, date, taxes, total, articles</p>
+            <p>• <strong>Calcul de confiance:</strong> Score de fiabilité de l'extraction</p>
           </div>
         </div>
       </CardContent>
