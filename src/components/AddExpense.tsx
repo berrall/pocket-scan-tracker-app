@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,8 +53,8 @@ export const AddExpense = () => {
         category,
         description,
         date: new Date(),
-        bankAccountType: bankAccountType || undefined,
-        bankInstitution: bankInstitution || undefined,
+        bank_account_type: bankAccountType || undefined,
+        bank_institution: bankInstitution || undefined,
       });
 
       toast({
