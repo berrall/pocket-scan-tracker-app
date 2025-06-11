@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -28,6 +27,7 @@ serve(async (req) => {
     const googleApiKey = Deno.env.get('GOOGLE_API_KEY');
 
     if (!googleApiKey) {
+      console.error('Google API key not configured');
       throw new Error('Google API key not configured');
     }
 
@@ -53,6 +53,8 @@ serve(async (req) => {
     });
 
     if (!visionResponse.ok) {
+      const errorText = await visionResponse.text();
+      console.error(`Vision API error: ${visionResponse.status} - ${errorText}`);
       throw new Error(`Vision API error: ${visionResponse.status}`);
     }
 
@@ -67,7 +69,9 @@ serve(async (req) => {
     console.log('Extracted text length:', extractedText.length);
 
     // Step 2: Use Gemini API to analyze and structure the receipt data
-    const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${googleApiKey}`, {
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${googleApiKey}`;
+    
+    const geminiResponse = await fetch(geminiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -113,7 +117,20 @@ ${extractedText}`
     });
 
     if (!geminiResponse.ok) {
-      throw new Error(`Gemini API error: ${geminiResponse.status}`);
+      const errorText = await geminiResponse.text();
+      console.error(`Gemini API error: ${geminiResponse.status} - ${errorText}`);
+      
+      // If Gemini fails, create a basic receipt structure from the extracted text
+      console.log('Falling back to basic text analysis...');
+      const fallbackData = await createFallbackReceiptData(extractedText);
+      
+      return new Response(JSON.stringify({ 
+        receiptData: fallbackData,
+        extractedText: extractedText.substring(0, 500),
+        fallback: true
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const geminiData = await geminiResponse.json();
@@ -146,30 +163,26 @@ ${extractedText}`
     } catch (parseError) {
       console.error('JSON parsing error:', parseError);
       console.error('Raw response:', responseText);
-      throw new Error('Failed to parse structured receipt data');
+      
+      // Fallback to basic analysis
+      const fallbackData = await createFallbackReceiptData(extractedText);
+      return new Response(JSON.stringify({ 
+        receiptData: fallbackData,
+        extractedText: extractedText.substring(0, 500),
+        fallback: true
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Validate and clean the data
-    if (!receiptData.storeName || !receiptData.date || !receiptData.total) {
-      throw new Error('Missing required receipt information');
-    }
-
-    // Ensure numeric values are properly formatted
-    receiptData.subtotal = Number(receiptData.subtotal) || 0;
-    receiptData.taxes = Number(receiptData.taxes) || 0;
-    receiptData.total = Number(receiptData.total) || 0;
-    receiptData.confidence = Math.min(Math.max(Number(receiptData.confidence) || 0.7, 0), 1);
-
-    // Ensure items is an array
-    if (!Array.isArray(receiptData.items)) {
-      receiptData.items = [];
-    }
+    receiptData = validateAndCleanReceiptData(receiptData);
 
     console.log('Successfully parsed receipt data:', receiptData);
 
     return new Response(JSON.stringify({ 
       receiptData,
-      extractedText: extractedText.substring(0, 500) // Include sample of extracted text for debugging
+      extractedText: extractedText.substring(0, 500)
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -185,3 +198,84 @@ ${extractedText}`
     });
   }
 });
+
+// Fallback function to create basic receipt data from text
+async function createFallbackReceiptData(text: string): Promise<ReceiptData> {
+  const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  
+  // Try to find store name (usually first non-empty line)
+  let storeName = 'Magasin non identifié';
+  if (lines.length > 0) {
+    storeName = lines[0].substring(0, 50); // Limit length
+  }
+  
+  // Try to find date
+  let date = new Date().toISOString().split('T')[0];
+  const dateRegex = /(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})|(\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2})/;
+  for (const line of lines) {
+    const dateMatch = line.match(dateRegex);
+    if (dateMatch) {
+      try {
+        const parsedDate = new Date(dateMatch[0]);
+        if (!isNaN(parsedDate.getTime())) {
+          date = parsedDate.toISOString().split('T')[0];
+        }
+      } catch (e) {
+        // Keep default date
+      }
+      break;
+    }
+  }
+  
+  // Try to find monetary amounts
+  const amounts: number[] = [];
+  const amountRegex = /\$?\s*(\d+[,\.]?\d*)/g;
+  
+  for (const line of lines) {
+    const matches = line.match(amountRegex);
+    if (matches) {
+      for (const match of matches) {
+        const num = parseFloat(match.replace(/[\$,]/g, ''));
+        if (!isNaN(num) && num > 0 && num < 10000) { // Reasonable range
+          amounts.push(num);
+        }
+      }
+    }
+  }
+  
+  // Assume the largest amount is the total
+  const total = amounts.length > 0 ? Math.max(...amounts) : 0;
+  const subtotal = total > 0 ? total * 0.88 : 0; // Approximate subtotal (assuming ~12% tax)
+  const taxes = total - subtotal;
+  
+  // Extract potential items (lines that don't look like headers or totals)
+  const items: string[] = [];
+  for (const line of lines.slice(1, 10)) { // Skip first line (store name), take up to 9 more
+    if (line.length > 3 && line.length < 50 && !line.match(/total|tax|sous-total|date/i)) {
+      items.push(line);
+    }
+  }
+  
+  return {
+    storeName,
+    date,
+    subtotal: Math.round(subtotal * 100) / 100,
+    taxes: Math.round(taxes * 100) / 100,
+    total: Math.round(total * 100) / 100,
+    items: items.slice(0, 5), // Limit to 5 items
+    confidence: 0.3 // Low confidence for fallback
+  };
+}
+
+// Function to validate and clean receipt data
+function validateAndCleanReceiptData(receiptData: any): ReceiptData {
+  return {
+    storeName: receiptData.storeName || 'Magasin non identifié',
+    date: receiptData.date || new Date().toISOString().split('T')[0],
+    subtotal: Math.round((Number(receiptData.subtotal) || 0) * 100) / 100,
+    taxes: Math.round((Number(receiptData.taxes) || 0) * 100) / 100,
+    total: Math.round((Number(receiptData.total) || 0) * 100) / 100,
+    items: Array.isArray(receiptData.items) ? receiptData.items.slice(0, 10) : [],
+    confidence: Math.min(Math.max(Number(receiptData.confidence) || 0.7, 0), 1)
+  };
+}
