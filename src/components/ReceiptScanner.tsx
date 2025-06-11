@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Scan } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ReceiptImageUpload } from "./receipt-scanner/ReceiptImageUpload";
-import { ScannedDataDisplay } from "./receipt-scanner/ScannedDataDisplay";
+import { EditableScannedData } from "./receipt-scanner/EditableScannedData";
 import { TransactionForm } from "./receipt-scanner/TransactionForm";
 import { ScannerInfo } from "./receipt-scanner/ScannerInfo";
 
@@ -39,6 +39,10 @@ export const ReceiptScanner = () => {
   const handleRemoveImage = () => {
     setImage(null);
     setScannedData(null);
+  };
+
+  const handleDataChange = (updatedData: ReceiptData) => {
+    setScannedData(updatedData);
   };
 
   const scanReceipt = async () => {
@@ -149,7 +153,10 @@ export const ReceiptScanner = () => {
           <div className="space-y-4">
             {scannedData && (
               <>
-                <ScannedDataDisplay scannedData={scannedData} />
+                <EditableScannedData 
+                  scannedData={scannedData} 
+                  onDataChange={handleDataChange}
+                />
                 <TransactionForm
                   category={category}
                   bankAccountType={bankAccountType}
